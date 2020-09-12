@@ -1,0 +1,38 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/ruby:2.7
+    working_directory: ~/deb
+    steps:
+      - checkout
+      - aws-cli/install
+      - run:
+          name: Download and import signing key
+          command: |
+            aws s3 cp s3://offen-secrets/signing-key.asc /tmp
+            gpg --import /tmp/signing-key.asc
+      - run:
+          name: Install fpm and dpkg-sig
+          command: |
+            gem install --no-document fpm
+            sudo apt-get install dpkg-sig
+      - run:
+          name: Package deb
+          command: ./package
+      - run:
+          name: Upload to S3
+          command: |
+            aws s3 cp *.deb s3://offen/deb/
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          context: AWS
+          filters:
+            branches:
+              only:
+                - master

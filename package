@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Copyright 2020 - Offen Authors <hioffen@posteo.de>
+# SPDX-License-Identifier: MPL-2.0
+
+set -eo pipefail
+
+check_deps () {
+  deps=("curl" "fpm" "gpg" "dpkg" "dpkg-sig")
+  for dep in $deps; do
+    if [ -z $(which $dep) ]; then
+      echo "This script requires $dep to be installed, cannot continue"
+      exit 1
+    fi
+  done
+}
+
+download () {
+  rm -rf bin && mkdir bin
+  curl -sSL https://get.offen.dev/$1 | tar -xvz -C bin
+  curl https://keybase.io/hioffen/pgp_keys.asc | gpg --import
+  gpg --verify bin/offen-linux-amd64.asc bin/offen-linux-amd64
+}
+
+package () {
+  stripped_version=$(echo $1 | cut -c 2-)
+  rm -f *.deb
+
+  artifact="offen_${stripped_version}_amd64.deb"
+
+  fpm \
+    --maintainer "Offen Authors <hioffen@posteo.de>" \
+    --url "https://www.offen.dev" \
+    --license "Apache-2.0" \
+    --vendor "Offen" \
+    --description "Offen is an open alternative to common web analytics tools. Gain insights while your users have full access to their data." \
+    --post-install "post_install.sh" \
+    --deb-systemd "offen.service" \
+    -p "offen_${stripped_version}_amd64.deb" \
+    -s dir -t deb -n offen -v $stripped_version \
+    bin/offen-linux-amd64=/usr/local/bin/offen \
+    offen.env=/etc/offen/
+
+  dpkg-sig --sign builder $artifact
+  echo "Successfully packaged and signed $artifact"
+}
+
+check_deps
+
+source ./version
+if [ -z "$OFFEN_VERSION" ]; then
+  echo "Expected OFFEN_VERSION to be set, got none."
+  exit 1
+fi
+
+echo "Packaging Offen at version $OFFEN_VERSION ..."
+download $OFFEN_VERSION
+package $OFFEN_VERSION

@@ -7,12 +7,14 @@ set -eo pipefail
 
 check_deps () {
   local deps=("curl" "fpm" "gpg" "dpkg-sig")
-  for dep in $deps; do
-    if [ -z $(which $dep) ]; then
+  set +e
+  for dep in "${deps[@]}"; do
+    if [ ! -x "$(which $dep)" ]; then
       echo "This script requires $dep to be installed, cannot continue"
       exit 1
     fi
   done
+  set -e
 }
 
 download () {

@@ -1,6 +1,10 @@
+<a href="https://offen.dev/">
+    <img src="https://offen.github.io/press-kit/offen-material/gfx-GitHub-Offen-logo.svg" alt="Offen logo" title="Offen" width="150px"/>
+</a>
+
 # deb
 
-Packaging Offen as a Debian package
+Offen as a Debian package
 
 This repo holds a script and some configuration files to package Offen as a Debian package. It can be run as:
 

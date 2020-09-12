@@ -1,0 +1,5 @@
+META_MAINTAINER="Offen Authors <hioffen@posteo.de>"
+META_URL="https://www.offen.dev"
+META_LICENSE="Apache-2.0"
+META_VENDOR="Offen"
+META_DESCRIPTION="Offen is an open alternative to common web analytics tools. Gain insights while your users have full access to their data."

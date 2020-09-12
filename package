@@ -33,11 +33,11 @@ package () {
   artifact="offen_${stripped_version}_amd64.deb"
 
   fpm \
-    --maintainer "Offen Authors <hioffen@posteo.de>" \
-    --url "https://www.offen.dev" \
-    --license "Apache-2.0" \
-    --vendor "Offen" \
-    --description "Offen is an open alternative to common web analytics tools. Gain insights while your users have full access to their data." \
+    --maintainer "$META_MAINTAINER" \
+    --url "$META_URL" \
+    --license "$META_LICENSE" \
+    --vendor "$META_VENDOR" \
+    --description "$META_DESCRIPTION" \
     --post-install "post_install.sh" \
     --deb-systemd "offen.service" \
     -p "offen_${stripped_version}_${2}.deb" \
@@ -52,6 +52,7 @@ package () {
 check_deps
 
 source ./version
+source ./meta
 if [ -z "$OFFEN_VERSION" ]; then
   echo "Expected OFFEN_VERSION to be set, got none."
   exit 1

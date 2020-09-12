@@ -36,3 +36,6 @@ workflows:
             branches:
               only:
                 - master
+
+orbs:
+  aws-cli: circleci/aws-cli@1.0.0

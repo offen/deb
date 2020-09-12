@@ -6,7 +6,7 @@
 set -eo pipefail
 
 check_deps () {
-  deps=("curl" "fpm" "gpg" "dpkg" "dpkg-sig")
+  local deps=("curl" "fpm" "gpg" "dpkg-sig")
   for dep in $deps; do
     if [ -z $(which $dep) ]; then
       echo "This script requires $dep to be installed, cannot continue"
@@ -24,13 +24,15 @@ download () {
   fi
   curl https://keybase.io/hioffen/pgp_keys.asc | gpg --import
   gpg --verify "bin/offen-linux-$2.asc" "bin/offen-linux-$2"
+
+  echo "Successfully downloaded binaries and verified signature."
 }
 
 package () {
-  stripped_version=$(echo $1 | cut -c 2-)
   rm -f *.deb
 
-  artifact="offen_${stripped_version}_amd64.deb"
+  local stripped_version=$(echo $1 | cut -c 2-)
+  local artifact="offen_${stripped_version}_${2}.deb"
 
   fpm \
     --maintainer "$META_MAINTAINER" \
@@ -38,28 +40,32 @@ package () {
     --license "$META_LICENSE" \
     --vendor "$META_VENDOR" \
     --description "$META_DESCRIPTION" \
-    --post-install "post_install.sh" \
+    --after-install "after_install.sh" \
     --deb-systemd "offen.service" \
-    -p "offen_${stripped_version}_${2}.deb" \
+    -p $artifact \
     -s dir -t deb -n offen -v $stripped_version \
     bin/offen-linux-$2=/usr/local/bin/offen \
     offen.env=/etc/offen/
 
   dpkg-sig --sign builder $artifact
-  echo "Successfully packaged and signed $artifact"
+
+  echo "Successfully packaged and signed $artifact."
 }
 
-check_deps
+setup_vars () {
+  source ./version
+  source ./meta
+  if [ -z "$OFFEN_VERSION" ]; then
+    echo "Expected OFFEN_VERSION to be set, got none."
+    exit 1
+  fi
+}
 
-source ./version
-source ./meta
-if [ -z "$OFFEN_VERSION" ]; then
-  echo "Expected OFFEN_VERSION to be set, got none."
-  exit 1
-fi
+run () {
+  check_deps
+  setup_vars
+  download $OFFEN_VERSION $1
+  package $OFFEN_VERSION $1
+}
 
-arch=${1:-amd64}
-
-echo "Packaging Offen at version $OFFEN_VERSION for $arch..."
-download $OFFEN_VERSION $arch
-package $OFFEN_VERSION $arch
+run ${1:-amd64}

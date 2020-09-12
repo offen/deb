@@ -18,8 +18,12 @@ check_deps () {
 download () {
   rm -rf bin && mkdir bin
   curl -sSL https://get.offen.dev/$1 | tar -xvz -C bin
+  if [ ! -f "bin/offen-linux-$2" ]; then
+    echo "Tarball did not include binary for $2"
+    exit 1
+  fi
   curl https://keybase.io/hioffen/pgp_keys.asc | gpg --import
-  gpg --verify bin/offen-linux-amd64.asc bin/offen-linux-amd64
+  gpg --verify "bin/offen-linux-$2.asc" "bin/offen-linux-$2"
 }
 
 package () {
@@ -36,9 +40,9 @@ package () {
     --description "Offen is an open alternative to common web analytics tools. Gain insights while your users have full access to their data." \
     --post-install "post_install.sh" \
     --deb-systemd "offen.service" \
-    -p "offen_${stripped_version}_amd64.deb" \
+    -p "offen_${stripped_version}_${2}.deb" \
     -s dir -t deb -n offen -v $stripped_version \
-    bin/offen-linux-amd64=/usr/local/bin/offen \
+    bin/offen-linux-$2=/usr/local/bin/offen \
     offen.env=/etc/offen/
 
   dpkg-sig --sign builder $artifact
@@ -53,6 +57,8 @@ if [ -z "$OFFEN_VERSION" ]; then
   exit 1
 fi
 
-echo "Packaging Offen at version $OFFEN_VERSION ..."
-download $OFFEN_VERSION
-package $OFFEN_VERSION
+arch=${1:-amd64}
+
+echo "Packaging Offen at version $OFFEN_VERSION for $arch..."
+download $OFFEN_VERSION $arch
+package $OFFEN_VERSION $arch

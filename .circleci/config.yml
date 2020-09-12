@@ -25,6 +25,7 @@ jobs:
           name: Upload to S3
           command: |
             aws s3 cp *.deb s3://offen/deb/
+            aws s3 cp $(ls *.deb | head -n 1) s3://offen/deb/offen_latest_amd64.deb
 
 workflows:
   version: 2

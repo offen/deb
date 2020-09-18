@@ -2,6 +2,8 @@ version: 2.1
 
 jobs:
   build:
+    environment:
+      MINIO_STORAGE: https://storage.offen.dev
     docker:
       - image: circleci/ruby:2.7
     working_directory: ~/deb
@@ -11,7 +13,7 @@ jobs:
       - run:
           name: Download and import signing key
           command: |
-            aws s3 cp s3://offen-secrets/signing-key.asc /tmp
+            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp s3://secrets/signing-key.asc /tmp
             gpg --import /tmp/signing-key.asc
       - run:
           name: Install fpm and dpkg-sig
@@ -24,8 +26,8 @@ jobs:
       - run:
           name: Upload to S3
           command: |
-            aws s3 cp *.deb s3://offen/deb/
-            aws s3 cp $(ls *.deb | head -n 1) s3://offen/deb/offen_latest_amd64.deb
+            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp *.deb s3://deb/
+            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp $(ls *.deb | head -n 1) s3://deb/offen_latest_amd64.deb
 
 workflows:
   version: 2

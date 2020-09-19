@@ -22,7 +22,7 @@ jobs:
             sudo apt-get install dpkg-sig
       - run:
           name: Package deb
-          command: ./package
+          command: ./package.sh
       - run:
           name: Upload to S3
           command: |

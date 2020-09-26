@@ -9,11 +9,11 @@ jobs:
     working_directory: ~/deb
     steps:
       - checkout
-      - aws-cli/install
+      - install_mc
       - run:
           name: Download and import signing key
           command: |
-            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp s3://secrets/signing-key.asc /tmp
+            mc cp offen/secrets/signing-key.asc /tmp
             gpg --import /tmp/signing-key.asc
       - run:
           name: Install fpm and dpkg-sig
@@ -26,19 +26,29 @@ jobs:
       - run:
           name: Upload to S3
           command: |
-            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp *.deb s3://deb/
-            AWS_ACCESS_KEY_ID=$MINIO_ACCESS_KEY AWS_SECRET_ACCESS_KEY=$MINIO_SECRET_KEY aws --endpoint $MINIO_STORAGE s3 cp $(ls *.deb | head -n 1) s3://deb/offen_latest_amd64.deb
+            mc cp *.deb offen/deb
+            mc cp $(ls *.deb | head -n 1) offen/deb/offen_latest_amd64.deb
 
 workflows:
   version: 2
   build:
     jobs:
       - build:
-          context: AWS
+          context: Storage
           filters:
             branches:
               only:
                 - master
 
-orbs:
-  aws-cli: circleci/aws-cli@1.0.0
+commands:
+  install_mc:
+    description: Install MinIO client
+    steps:
+      - run:
+          name: Download client
+          working_directory: '~'
+          command: |
+            curl https://dl.min.io/client/mc/release/linux-amd64/mc -o mc
+            chmod +x mc
+            sudo mv mc /usr/local/bin/mc
+            command -v mc

@@ -11,6 +11,9 @@ jobs:
       - checkout
       - install_mc
       - run:
+          name: Install dependencies
+          command: sudo apt-get update && sudo apt-get install -y dpkg-sig
+      - run:
           name: Download and import signing key
           command: |
             mc cp offen/secrets/signing-key.asc /tmp

@@ -4,9 +4,9 @@
 
 # deb
 
-Offen as a Debian package
+Offen Fair Web Analytics as a Debian package
 
-This repo holds a script and some configuration files to package Offen as a Debian package. It can be run as:
+This repo holds a script and some configuration files to package Offen Fair Web Analytics as a Debian package. It can be run as:
 
 ```
 ./package [arch - default=amd64]
